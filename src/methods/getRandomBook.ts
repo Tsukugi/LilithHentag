@@ -1,52 +1,28 @@
-import { GetRandomBook, Book, LilithError } from "@atsu/lilith";
-import { UseNHentaiMethodProps } from "../interfaces";
-import { useNHentaiGetBookmethod } from "./getBook";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { GetRandomBook, Book } from "@atsu/lilith";
+import { UseHenTagMethodProps } from "../interfaces";
+import { useLilithLog } from "../utils/log";
 
 /**
- * Hook for retrieving a random book from NHentai.
- * @param {UseNHentaiMethodProps} props - Properties required for the hook.
+ * Hook for retrieving a random book from HenTag.
+ * @param {UseHenTagMethodProps} props - Properties required for the hook.
  * @returns {GetRandomBook} - A function that retrieves a random book.
  */
-export const useNHentaiGetRandomBookMethod = (
-    props: UseNHentaiMethodProps,
+export const useHenTagGetRandomBookMethod = (
+    props: UseHenTagMethodProps,
 ): GetRandomBook => {
-    const {
-        domains: { baseUrl },
-        request,
-    } = props;
-
-    /**
-     * Retrieves a random book from NHentai.
-     * @param {number} [retry=0] - The number of times to retry if fetching a random book fails.
-     * @returns {Promise<Book | null>} - A Promise that resolves to the retrieved random book or null if unsuccessful.
-     * @throws {LilithError} - Throws an error if the random book cannot be fetched after the specified number of retries.
-     */
-    const getRandomBook = async (retry: number = 0): Promise<Book> => {
-        const response = await request(`${baseUrl}/random`);
-
-        const document = await response.getDocument();
-
-        const idElement = document.find("h3#gallery_id");
-
-        if (!idElement || !idElement.getText()) {
-            throw new LilithError(
-                404,
-                "Could not find ID element in the response.",
-            );
-        }
-
-        const id = idElement.getText().replace("#", "");
-        const result = (await useNHentaiGetBookmethod(props)(id)) || null;
-
-        if (!result) {
-            if (retry >= 3) {
-                throw new LilithError(404, "Could not fetch a random book.");
-            }
-            return getRandomBook(retry + 1);
-        }
-
-        return result;
+    //! Hentag doesnt have trending
+    return async (): Promise<Book> => {
+        return {
+            id: "test",
+            cover: {
+                uri: "test",
+            },
+            title: "test",
+            availableLanguages: [],
+            author: "test",
+            tags: [],
+            chapters: [],
+        };
     };
-
-    return getRandomBook;
 };

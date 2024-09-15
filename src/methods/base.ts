@@ -7,7 +7,7 @@ import {
 } from "@atsu/lilith";
 
 import { UseDomParserImpl } from "../interfaces/domParser";
-import { GetImageUriProps, NHentaiLanguage, NHentaiTag } from "../interfaces";
+import { GetImageUriProps, HenTagLanguage } from "../interfaces";
 import { ArrayUtils } from "../utils/array";
 
 /*
@@ -23,39 +23,27 @@ export const DefaultSearchOptions = {
 };
 
 /**
- * The size of results per page in an NHentai search.
+ * The size of results per page in an HenTag search.
  */
-const NHentaiPageResultSize = 25;
+const HenTagPageResultSize = 25;
 
 /**
- * Mapper that converts NHentai language codes to LilithLanguage enum values.
+ * Mapper that converts HenTag language codes to LilithLanguage enum values.
  */
 const LanguageCodeMapper: Record<string, LilithLanguage> = {
-    "12227": LilithLanguage.english,
-    "29963": LilithLanguage.mandarin,
-    "6346": LilithLanguage.japanese,
+    "1": LilithLanguage.english,
+    "2": LilithLanguage.japanese,
+    "3": LilithLanguage.spanish,
+    "11": LilithLanguage.mandarin,
 };
 
 /**
- * Mapper that converts NHentaiLanguage enum values to LilithLanguage enum values.
+ * Mapper that converts HenTagLanguage enum values to LilithLanguage enum values.
  */
-const LanguageMapper: Record<NHentaiLanguage, LilithLanguage> = {
-    [NHentaiLanguage.english]: LilithLanguage.english,
-    [NHentaiLanguage.japanese]: LilithLanguage.japanese,
-    [NHentaiLanguage.chinese]: LilithLanguage.mandarin,
-};
-
-/**
- * Retrieves the NHentaiLanguage from a given array of NHentai tags.
- * @param {NHentaiTag[]} tags - Array of NHentai tags.
- * @returns {NHentaiLanguage} - NHentaiLanguage enum value.
- */
-const getLanguageFromTags = (tags: NHentaiTag[]): NHentaiLanguage => {
-    const filteredTag = tags.find(
-        (tag) => tag.type === "language" && LanguageMapper[tag.name],
-    );
-    const result = filteredTag?.name || NHentaiLanguage.japanese;
-    return result as NHentaiLanguage;
+const LanguageMapper: Record<HenTagLanguage, LilithLanguage> = {
+    [HenTagLanguage.english]: LilithLanguage.english,
+    [HenTagLanguage.japanese]: LilithLanguage.japanese,
+    [HenTagLanguage.chinese]: LilithLanguage.mandarin,
 };
 
 /**
@@ -194,16 +182,15 @@ const getImageUri = ({
 };
 
 /**
- * NHentaiBase object containing various utilities related to NHentai integration.
+ * HenTagBase object containing various utilities related to HenTag integration.
  */
-export const useNHentaiMethods = () => {
+export const useHenTagMethods = () => {
     return {
-        NHentaiPageResultSize,
+        HenTagPageResultSize,
         LanguageMapper,
         LanguageCodeMapper,
         getImageUri,
         extractLanguages,
-        getLanguageFromTags,
         getGalleries,
     };
 };

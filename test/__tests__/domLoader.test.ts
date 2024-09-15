@@ -1,22 +1,24 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
 
-import { RepositoryBase } from "@atsu/lilith";
-
-import { headers, TextMocksForDomParser, fetchMock } from "../nhentaiMock";
-import { useLilithNHentai } from "../../src/loader";
+import { headers } from "../hentagMock";
+import { useLilithHenTag } from "../../src/loader";
 import { useLilithLog } from "../../src/utils/log";
+import { HentagRepo } from "../../src/interfaces";
 
 const debug = false;
 const { log, warn } = useLilithLog(debug);
 
 describe("DOMLoader", () => {
-    let loader: RepositoryBase = {} as RepositoryBase;
-    beforeEach(() => {
-        loader = useLilithNHentai({
+    let loader = {} as HentagRepo;
+    beforeAll(async () => {
+        loader = await useLilithHenTag({
             headers,
-            fetch: () => fetchMock({}, TextMocksForDomParser.Search),
             options: { debug },
         });
+    });
+
+    afterAll(() => {
+        loader.clear();
     });
 
     test("Custom fetch for JSON", async () => {
@@ -30,11 +32,7 @@ describe("DOMLoader", () => {
     });
 
     test("Custom fetch for text", async () => {
-        const randomLoader = useLilithNHentai({
-            headers,
-            fetch: () => fetchMock({}, TextMocksForDomParser.Random),
-        });
-        const res = await randomLoader.getRandomBook();
+        const res = await loader.getRandomBook();
 
         if (res === null)
             warn("[Custom fetch for JSON] Resource was not found");

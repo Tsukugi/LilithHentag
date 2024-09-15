@@ -1,12 +1,7 @@
-import {
-    UrlParamValue,
-    UrlParamPair,
-    RepositoryBaseProps,
-    CustomFetchInitOptions,
-    LilithError,
-} from "@atsu/lilith";
-import { Result } from "../interfaces/fetch";
+import { UrlParamValue, UrlParamPair, LilithError } from "@atsu/lilith";
+import { HenTagRequestProps, Result } from "../interfaces/fetch";
 import { useLilithLog } from "./log";
+import { HenTagProps, UseRequest } from "../interfaces";
 
 const useParamIfExists = (
     key: string,
@@ -30,29 +25,32 @@ const useUrlWithParams = (url: string, params?: UrlParamPair[]) => {
 
 export const useRequest = ({
     fetch,
-    domParser,
+    getPage,
     options: { debug },
-}: RepositoryBaseProps) => {
-    const doRequest = async <T>(
-        url: string,
-        params?: UrlParamPair[],
-        requestOptions: Partial<CustomFetchInitOptions> = {},
-    ): Promise<Result<T>> => {
+}: HenTagProps): UseRequest => {
+    const fetchRequest = async <T>({
+        url,
+        params,
+    }: HenTagRequestProps): Promise<Result<T>> => {
         try {
             const apiUrl = useUrlWithParams(url, params);
 
             useLilithLog(debug).log(apiUrl);
 
-            const response = await fetch(apiUrl, requestOptions);
+            const response = await fetch(url, {
+                method: "GET",
+            });
 
-            const getDocument = async () => domParser(await response.text());
+            if (response.status !== 200) {
+                throw new LilithError(response.status, "Unsuccessful request");
+            }
 
             return {
-                json: response.json,
                 statusCode: response.status,
-                getDocument,
+                data: await response.json(),
             };
         } catch (error) {
+            console.trace(error);
             throw new LilithError(
                 error.status || 500,
                 "There was an error on the request",
@@ -61,7 +59,36 @@ export const useRequest = ({
         }
     };
 
-    return { doRequest };
+    const scrapRequest = async <T>({
+        url,
+        params,
+        onEvaluation,
+    }: HenTagRequestProps): Promise<Result<T>> => {
+        try {
+            const apiUrl = useUrlWithParams(url, params);
+
+            useLilithLog(debug).log(apiUrl);
+
+            const parsedDocument = await getPage({
+                url,
+                onEvaluation,
+            });
+
+            return {
+                statusCode: 200,
+                data: JSON.parse(parsedDocument),
+            };
+        } catch (error) {
+            console.trace(error);
+            throw new LilithError(
+                error.status || 500,
+                "There was an error on the request",
+                error,
+            );
+        }
+    };
+
+    return { fetchRequest, scrapRequest };
 };
 
 export const RequestUtils = {

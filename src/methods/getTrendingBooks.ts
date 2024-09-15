@@ -1,40 +1,21 @@
 import { GetTrendingBooks, BookBase } from "@atsu/lilith";
-import { UseNHentaiMethodProps } from "../interfaces";
+import { UseHenTagMethodProps } from "../interfaces";
 import { useLilithLog } from "../utils/log";
-import { useNHentaiMethods } from "./base";
 
 /**
- * Custom hook for fetching the latest NHentai books using the provided options and methods.
+ * Custom hook for fetching the latest HenTag books using the provided options and methods.
  *
- * @param {UseNHentaiMethodProps} props - The options and methods needed for NHentai latest book retrieval.
+ * @param {UseHenTagMethodProps} props - The options and methods needed for HenTag latest book retrieval.
  * @returns {GetTrendingBooks} - The function for fetching the latest books.
  */
-export const useNHentaiGetTrendingBooksMethod = (
-    props: UseNHentaiMethodProps,
+export const useHenTagGetTrendingBooksMethod = (
+    props: UseHenTagMethodProps,
 ): GetTrendingBooks => {
-    const {
-        domains: { baseUrl },
-        options: { debug, requiredLanguages },
-        request,
-    } = props;
+    const { domains } = props;
 
-    const { getGalleries } = useNHentaiMethods();
+    //! Hentag doesnt have trending
     return async (): Promise<BookBase[]> => {
-        const response = await request(`${baseUrl}`);
-
-        const document = await response.getDocument();
-
-        const popularGalleriesContainerSelector =
-            "div.container.index-container.index-popular";
-
-        const galleries = getGalleries(
-            document,
-            requiredLanguages,
-            popularGalleriesContainerSelector,
-        );
-
-        useLilithLog(debug).log({ galleries });
-
-        return galleries;
+        useLilithLog(false).log(domains);
+        return [];
     };
 };

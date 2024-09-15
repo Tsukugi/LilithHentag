@@ -1,33 +1,27 @@
-import { beforeEach, describe, expect, test } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
 
-import {
-    RepositoryBase,
-    Book,
-    SearchResult,
-    BookListResults,
-    BookBase,
-} from "@atsu/lilith";
+import { Book, SearchResult, BookListResults, BookBase } from "@atsu/lilith";
 
-import { TextMocksForDomParser, headers, fetchMock } from "../nhentaiMock";
-import { useCheerioDomParser } from "../../src/impl/useCheerioDomParser";
-
-import { useNodeFetch } from "../../src/impl/useNodeFetch";
-import { useAPILoader } from "../../src/index";
+import { headers } from "../hentagMock";
+import { useLilithHenTag } from "../../src/index";
 import { useLilithLog } from "../../src/utils/log";
+import { HentagRepo } from "../../src/interfaces";
 
 const debug = false;
 const { log } = useLilithLog(debug);
 
 describe("Lilith", () => {
-    describe("Test nhentai ", () => {
-        let loader: RepositoryBase = {} as RepositoryBase;
-        beforeEach(() => {
-            loader = useAPILoader({
+    describe("Test HenTag ", () => {
+        let loader = {} as HentagRepo;
+        beforeAll(async () => {
+            loader = await useLilithHenTag({
                 headers,
-                domParser: useCheerioDomParser,
-                fetch: useNodeFetch,
                 options: { debug },
             });
+        });
+
+        afterAll(() => {
+            loader.clear();
         });
 
         test("getBook", async () => {
@@ -63,15 +57,10 @@ describe("Lilith", () => {
             const page: BookBase[] = await loader.getTrendingBooks();
             log(page.map((result) => result.title));
             expect(page).toBeDefined();
-            expect(page.length).toBeGreaterThan(0);
+            //  expect(page.length).toBeGreaterThan(0); Trending doesnt exist in HenTag
         });
         test("RandomBook", async () => {
-            const randomLoader = useAPILoader({
-                headers,
-                fetch: () => fetchMock({}, TextMocksForDomParser.Random),
-                domParser: useCheerioDomParser,
-            });
-            const book: Book = await randomLoader.getRandomBook();
+            const book: Book = await loader.getRandomBook();
             log(book);
             expect(book).toBeDefined();
         });

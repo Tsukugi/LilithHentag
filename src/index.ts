@@ -1,1 +1,1 @@
-export { useLilithNHentai } from "./loader";
+export { useLilithHenTag } from "./loader";

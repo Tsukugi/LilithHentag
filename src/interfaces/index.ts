@@ -1,72 +1,87 @@
-import { RepositoryBaseProps, Domains, ImageUriType } from "@atsu/lilith";
-import { LilithRequest } from "./fetch";
+import {
+    RepositoryBaseProps,
+    Domains,
+    ImageUriType,
+    RepositoryBase,
+} from "@atsu/lilith";
+import { HenTagRequestProps, Result } from "./fetch";
+import { UseAmagiPageProps } from "@atsu/amagi";
 
-export enum NHentaiImageExtension {
+export enum HenTagImageExtension {
     j = "jpg",
     p = "png",
     g = "gif",
 }
 
-interface NHentaiPage {
-    t: NHentaiImageExtension;
-    w: number;
-    h: number;
-}
-
-export interface NHentaiTag {
-    id: number;
-    type: string;
+export interface HenTagRef {
+    id: string;
     name: string;
-    url: string;
-    count: number;
+}
+export interface HenTagTag extends HenTagRef {}
+
+export interface HenTagResult {
+    id: string;
+    title: string;
+    parodies: HenTagRef[];
+    circles: HenTagRef[];
+    artists: HenTagRef[];
+    characters: HenTagRef[];
+    maleTags: HenTagTag[];
+    femaleTags: HenTagTag[];
+    otherTags: HenTagTag[];
+    language: number;
+    category: number;
+    locations: string[];
+    createdAt: number;
+    lastModified: number;
+    coverImageUrl: string;
+    favorite: boolean;
+    isControversial: boolean;
+    isDead: boolean;
+    isPendingApproval: boolean;
 }
 
-export interface NHentaiResult {
-    id: number;
-    media_id: string;
-    title: {
-        english: string;
-        japanese: string;
-        pretty: string;
-    };
-    images: {
-        pages: NHentaiPage[];
-        cover: NHentaiPage;
-        thumbnail: NHentaiPage;
-    };
-    scanlator: string;
-    upload_date: number;
-    tags: NHentaiTag[];
-    num_pages: number;
-    num_favorites: number;
+export interface HenTagPaginateResult {
+    page: number;
+    pageSize: number;
+    works: HenTagResult[];
+    total: number;
+    requestedAt: number; // Timestamp
 }
 
-export interface NHentaiPaginateResult {
-    result: NHentaiResult[];
-    num_pages: number;
-    per_page: number;
-}
-
-export enum NHentaiLanguage {
+export enum HenTagLanguage {
     english = "english",
     japanese = "japanese",
     chinese = "chinese",
 }
 
-export interface UseNHentaiMethodProps extends RepositoryBaseProps {
+export interface UseHenTagMethodProps extends RepositoryBaseProps {
     domains: Domains;
-    request: LilithRequest;
+    request: UseRequest;
+}
+
+export interface UseRequest {
+    fetchRequest: <T>(props: HenTagRequestProps) => Promise<Result<T>>;
+    scrapRequest: <T>(props: HenTagRequestProps) => Promise<Result<T>>;
+}
+
+export interface HenTagProps extends RepositoryBaseProps {
+    getPage: ({ url, onEvaluation }: UseAmagiPageProps) => Promise<string>;
+}
+
+export interface HentagRepo extends RepositoryBase {
+    clear: () => void;
 }
 
 export interface GetImageUriProps {
     domains: Domains;
     mediaId: string;
     type: ImageUriType;
-    imageExtension: NHentaiImageExtension;
+    imageExtension: HenTagImageExtension;
     pageNumber?: number;
 }
 
-export enum NHentaiSort {
+export enum HenTagSort {
     RECENT = "recent",
     POPULAR_TODAY = "popular-today",
     POPULAR_WEEK = "popular-week",

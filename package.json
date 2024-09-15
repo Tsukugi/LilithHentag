@@ -1,5 +1,5 @@
 {
-  "name": "@atsu/lilith-nhentai",
+  "name": "@atsu/lilith-hentag",
   "version": "0.0.1",
   "main": "./dist/main.umd.bundle.js",
   "exports": {
@@ -13,7 +13,7 @@
   "types": "./dist/index.d.ts",
   "author": "Tsukugi",
   "license": "MIT",
-  "description": "NHentai implementation for Lilith",
+  "description": "HenTag implementation for Lilith",
   "scripts": {
     "compile": "tsc",
     "test": "jest --config jest.config.js",
@@ -27,7 +27,8 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@atsu/lilith": "github:Tsukugi/Lilith"
+    "@atsu/lilith": "github:Tsukugi/Lilith",
+    "@atsu/amagi": "github:Tsukugi/Amagi"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
