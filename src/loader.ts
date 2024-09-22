@@ -1,24 +1,11 @@
-import {
-    LilithHeaders,
-    CustomFetch,
-    RepositoryBaseOptions,
-    LilithLanguage,
-} from "@atsu/lilith";
+import { LilithLanguage, RepositoryBaseProps } from "@atsu/lilith";
 import { useHenTagRepository } from "./hentag";
-import { UseDomParser } from "./interfaces/domParser";
 import { useCheerioDomParser } from "./impl/useCheerioDomParser";
 import { useNodeFetch } from "./impl/useNodeFetch";
 import { HenTagProps, HentagRepo } from "./interfaces";
 
-export interface APILoaderConfigurations {
-    headers?: Partial<LilithHeaders>;
-    fetch: CustomFetch;
-    domParser: UseDomParser;
-    options: Partial<RepositoryBaseOptions>;
-}
-
 export const useLilithHenTag = async (
-    config: Partial<APILoaderConfigurations>,
+    config: Partial<RepositoryBaseProps>,
 ): Promise<HentagRepo> => {
     const innerConfigurations: HenTagProps = {
         fetch: useNodeFetch,
@@ -27,12 +14,7 @@ export const useLilithHenTag = async (
         ...config,
         options: {
             debug: false,
-            requiredLanguages: [
-                LilithLanguage.english,
-                LilithLanguage.japanese,
-                LilithLanguage.mandarin,
-                LilithLanguage.spanish,
-            ],
+            requiredLanguages: Object.values(LilithLanguage),
             ...config.options,
         },
     };
