@@ -16,7 +16,7 @@ export const useHenTagRepository: HenTagRepositoryProps = (props) => {
     const { headers, getPage } = props;
 
     const baseUrl = "https://hentag.com";
-    const apiUrl = "https://hentag.com/api/v1";
+    const apiUrl = "https://hentag.com/public/api";
     const imgBaseUrl = "https://cdn.hentag.com";
     const tinyImgBaseUrl = "https://cdn.hentag.com";
 

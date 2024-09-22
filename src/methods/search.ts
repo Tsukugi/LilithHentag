@@ -1,11 +1,12 @@
 import {
-    LilithError,
     SearchResult,
     Search,
     SearchQueryOptions,
+    BookBase,
 } from "@atsu/lilith";
 
-import { UseHenTagMethodProps } from "../interfaces";
+import { HenTagPaginateResult, UseHenTagMethodProps } from "../interfaces";
+import { MaxLatestBooksSize, useHenTagMethods } from "./base";
 
 /**
  * Custom hook for searching HenTag using the provided options and methods.
@@ -14,46 +15,32 @@ import { UseHenTagMethodProps } from "../interfaces";
  * @returns {Search} - The search function.
  */
 export const useHenTagSearchMethod = ({
-    domains: { baseUrl },
+    domains: { apiUrl },
     request,
 }: UseHenTagMethodProps): Search => {
     return async (
         query: string,
         options?: Partial<SearchQueryOptions>,
     ): Promise<SearchResult> => {
-        const page = options?.page || 1;
-        const response = await request.fetchRequest<SearchResult>({
-            url: baseUrl,
+        const { getHenTagResultsToBookBase } = useHenTagMethods();
+        const response = await request.fetchRequest<HenTagPaginateResult>({
+            url: `${apiUrl}/vault-search`,
             params: [
-                ["t", query],
-                ["p", page],
+                ["s", MaxLatestBooksSize],
+                ["p", options?.page || 1],
             ],
-            onEvaluation: () => {
-                const res: SearchResult = {
-                    query: query,
-                    page: 1,
-                    totalPages: 1,
-                    totalResults: 1,
-                    results: [
-                        {
-                            id: "test",
-                            cover: { uri: "10", width: 10, height: 10 },
-                            title: "string",
-                            availableLanguages: [],
-                        },
-                    ],
-                };
-                return JSON.stringify(res);
-            },
         });
 
-        if (response.statusCode !== 200) {
-            throw new LilithError(
-                response.statusCode,
-                "Could not find a correct pagination",
-            );
-        }
+        const { page, total, pageSize, works } = response.data;
 
-        return response.data;
+        const results: BookBase[] = getHenTagResultsToBookBase(works);
+
+        return {
+            query,
+            results,
+            page,
+            totalResults: total,
+            totalPages: Math.floor(total / pageSize),
+        };
     };
 };

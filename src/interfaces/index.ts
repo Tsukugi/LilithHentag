@@ -6,6 +6,7 @@ import {
 } from "@atsu/lilith";
 import { HenTagRequestProps, Result } from "./fetch";
 import { UseAmagiPageProps } from "@atsu/amagi";
+import { UseDomParserImpl } from "./domParser";
 
 export enum HenTagImageExtension {
     j = "jpg",
@@ -62,7 +63,10 @@ export interface UseHenTagMethodProps extends RepositoryBaseProps {
 
 export interface UseRequest {
     fetchRequest: <T>(props: HenTagRequestProps) => Promise<Result<T>>;
-    scrapRequest: <T>(props: HenTagRequestProps) => Promise<Result<T>>;
+    scrapRequest: (
+        props: HenTagRequestProps,
+    ) => Promise<Result<UseDomParserImpl>>;
+    amagiRequest: <T>(props: HenTagRequestProps) => Promise<Result<T>>;
 }
 
 export interface HenTagProps extends RepositoryBaseProps {

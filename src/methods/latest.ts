@@ -1,9 +1,4 @@
-import {
-    GetLatestBooks,
-    BookListResults,
-    BookBase,
-    LilithLanguage,
-} from "@atsu/lilith";
+import { GetLatestBooks, BookListResults, BookBase } from "@atsu/lilith";
 import { HenTagPaginateResult, UseHenTagMethodProps } from "../interfaces";
 import { MaxLatestBooksSize, useHenTagMethods } from "./base";
 
@@ -21,9 +16,11 @@ export const useHenTagGetLatestBooksMethod = (
         request,
     } = props;
 
+    const { getHenTagResultsToBookBase } = useHenTagMethods();
+
     return async (pageNumber: number): Promise<BookListResults> => {
         const response = await request.fetchRequest<HenTagPaginateResult>({
-            url: `${apiUrl}public/api/vault-search`,
+            url: `${apiUrl}/vault-search`,
             params: [
                 ["s", MaxLatestBooksSize],
                 ["p", pageNumber],
@@ -32,15 +29,7 @@ export const useHenTagGetLatestBooksMethod = (
 
         const { page, total, pageSize, works } = response.data;
 
-        const results: BookBase[] = works.map((work) => ({
-            id: work.id,
-            cover: { uri: work.coverImageUrl },
-            title: work.title,
-            availableLanguages: [
-                useHenTagMethods().LanguageCodeMapper[`${work.language}`] ||
-                    LilithLanguage.japanese,
-            ],
-        }));
+        const results: BookBase[] = getHenTagResultsToBookBase(works);
 
         return {
             results,

@@ -1,14 +1,13 @@
 import {
     LilithLanguage,
     BookBase,
-    LilithError,
-    LilithImage,
     Sort,
+    Chapter,
+    LilithImage,
 } from "@atsu/lilith";
 
+import { HenTagLanguage, HenTagResult, UseRequest } from "../interfaces";
 import { UseDomParserImpl } from "../interfaces/domParser";
-import { GetImageUriProps, HenTagLanguage } from "../interfaces";
-import { ArrayUtils } from "../utils/array";
 
 /*
  *  This is the size that will define a Page in Search
@@ -46,139 +45,71 @@ const LanguageMapper: Record<HenTagLanguage, LilithLanguage> = {
     [HenTagLanguage.chinese]: LilithLanguage.mandarin,
 };
 
-/**
- * Extracts LilithLanguage array from the given title string.
- * @param {string} title - Title string.
- * @returns {LilithLanguage[]} - Array of LilithLanguage values.
- */
-const extractLanguages = (title: string): LilithLanguage[] => {
-    const matches = title.toLowerCase().match(/\[(.*?)\]/g);
-    const possibleLanguages = matches
-        ? matches.map((match) => match.slice(1, -1))
-        : [];
-    const languages: LilithLanguage[] = possibleLanguages
-        .filter((lang) => Object.keys(LanguageMapper).includes(lang))
-        .map((lang) => LanguageMapper[lang]);
+const getHenTagResultToBookBase = (work: HenTagResult): BookBase => ({
+    id: work.id,
+    cover: { uri: work.coverImageUrl },
+    title: work.title,
+    availableLanguages: [
+        LanguageCodeMapper[`${work.language}`] || LilithLanguage.japanese,
+    ],
+});
 
-    return languages;
+const getHenTagResultsToBookBase = (works: HenTagResult[]): BookBase[] => {
+    return works.map(getHenTagResultToBookBase);
 };
-/**
- * Function for extracting galleries (books) from a parsed DOM document.
- *
- * @param {UseDomParserImpl} document - The parsed DOM document.
- * @param {LilithLanguage[]} requiredLanguages - The languages required for filtering galleries.
- * @returns {BookBase[]} - An array of book objects representing the extracted galleries.
- */
-const getGalleries = (
-    document: UseDomParserImpl,
-    requiredLanguages: LilithLanguage[],
-    containerSelector: string = "div.container.index-container",
-): BookBase[] => {
-    // Checking for Cloudflare challenge
-    const cloudflareDomCheck = document.find("div#content").getAttribute("id");
-    if (!cloudflareDomCheck) {
-        throw new LilithError(
-            401,
-            "Cloudflare challenge triggered, we should provide the correct Cloudflare clearance",
-        );
-    }
 
-    // Extracting the container element from the document
-    const container = document.find(containerSelector);
-    if (!container) {
-        throw new LilithError(
-            404,
-            "DOM Parser failed to find necessary elements needed for this process",
-        );
-    }
+const scrapEHentaiChapter = async (
+    url: string,
+    { scrapRequest }: UseRequest,
+): Promise<Chapter> => {
+    const { data } = await scrapRequest({ url });
 
-    // Extracting gallery elements from the container
-    const galleries: UseDomParserImpl[] = container.findAll("div.gallery");
-
-    // Handling case where no galleries are found
-    if (!galleries || galleries.length === 0) {
-        throw new LilithError(404, "No search results found");
-    }
-
-    // Function to extract languages from a gallery element
-    const getLanguageFromAttribute = (
-        el: UseDomParserImpl,
-    ): LilithLanguage[] => {
-        const languagesRetrieved = el
-            .getAttribute("data-tags")
-            .split(" ")
-            .filter((code) => Object.keys(LanguageCodeMapper).includes(code))
-            .map((code) => LanguageCodeMapper[code]);
-        return languagesRetrieved;
+    const scrapImages = (data: UseDomParserImpl) => {
+        return data.findAll(".gdtm a").map((a) => ({
+            uri: a.getAttribute("href"),
+        }));
     };
 
-    // Filtering and mapping gallery elements to book objects
-    return galleries
-        .filter((searchElement) => {
-            return (
-                ArrayUtils.findCommonElements(
-                    getLanguageFromAttribute(searchElement),
-                    requiredLanguages,
-                ).length > 0
-            );
-        })
-        .map((searchElement) => {
-            const anchorElement = searchElement.find("> a");
-            const bookId = anchorElement
-                .getAttribute("href")
-                .split("/")
-                .find((p) => p.length > 5); // A NH code should never be less than 6 digits
-
-            const resultCover = anchorElement.find("img");
-
-            const { getAttribute } = resultCover;
-            const cover: LilithImage = {
-                uri: getAttribute("data-src") || getAttribute("src") || "",
-                width: +getAttribute("width") || 0,
-                height: +getAttribute("height") || 0,
-            };
-
-            const titleElement = anchorElement.find(".caption");
-            const title: string = titleElement?.getText() || "";
-
-            let availableLanguages: LilithLanguage[] =
-                getLanguageFromAttribute(searchElement);
-
-            // If no languages are retrieved, try extracting from the title
-            if (availableLanguages.length === 0) {
-                availableLanguages = extractLanguages(title);
-            }
-
-            // Constructing and returning the book object
-            return {
-                id: bookId,
-                cover: cover,
-                title,
-                availableLanguages,
-            };
+    const scrapPage = async (url: string): Promise<LilithImage[]> => {
+        const { data } = await scrapRequest({
+            url,
         });
-};
 
-/**
- * Get the image URI based on the provided parameters.
- * @param {GetImageUriProps} props - The properties needed to generate the image URI.
- * @returns {string} - The generated image URI.
- * @throws {LilithError} - Throws an error for invalid type or missing page number.
- */
-const getImageUri = ({
-    domains: { tinyImgBaseUrl, imgBaseUrl },
-    mediaId,
-    type,
-    imageExtension,
-    pageNumber,
-}: GetImageUriProps): string => {
-    if (type === "cover")
-        return `${tinyImgBaseUrl}/${mediaId}/cover.${imageExtension}`;
-    if (type === "thumbnail")
-        return `${tinyImgBaseUrl}/${mediaId}/thumb.${imageExtension}`;
-    if (type === "page" && pageNumber !== undefined)
-        return `${imgBaseUrl}/${mediaId}/${pageNumber}.${imageExtension}`;
-    throw new LilithError(500, "Invalid type or missing page number.");
+        return scrapImages(data);
+    };
+
+    const exlanguage = data
+        .findAll("#gdd td.gdt2")[3] // The fourth element is the language
+        .getText()
+        .trim()
+        .toLowerCase();
+    const title = data.find(".gn").getText();
+    const pageUrls: string[] = Array.from(
+        new Set(
+            data
+                .findAll("td a[onclick='return false']")
+                .map((a) => a.getAttribute("href")),
+        ),
+    );
+
+    let images = scrapImages(data);
+
+    if (pageUrls.length > 1) {
+        const processes = pageUrls
+            .filter((url) => url.includes("?p=")) // We want pages excluding the first page (without ?p=)
+            .map((url) => scrapPage(url));
+
+        const extraPages = (await Promise.all(processes)).flat();
+        images = [...images, ...extraPages];
+    }
+
+    return {
+        id: url,
+        title,
+        language: LanguageMapper[exlanguage],
+        chapterNumber: 1,
+        pages: images,
+    };
 };
 
 /**
@@ -186,11 +117,11 @@ const getImageUri = ({
  */
 export const useHenTagMethods = () => {
     return {
+        scrapEHentaiChapter,
+        getHenTagResultsToBookBase,
+        getHenTagResultToBookBase,
         HenTagPageResultSize,
         LanguageMapper,
         LanguageCodeMapper,
-        getImageUri,
-        extractLanguages,
-        getGalleries,
     };
 };

@@ -1,7 +1,6 @@
-import { Book, GetBook } from "@atsu/lilith";
-import { UseHenTagMethodProps } from "../interfaces";
-import { useLilithLog } from "../utils/log";
-
+import { Book, GetBook, LilithLanguage } from "@atsu/lilith";
+import { HenTagResult, UseHenTagMethodProps } from "../interfaces";
+import { useHenTagMethods } from "./base";
 /**
  * Hook for interacting with HenTag books.
  * @param {UseHenTagMethodProps} props - Properties required for the hook.
@@ -10,21 +9,44 @@ import { useLilithLog } from "../utils/log";
 export const useHenTagGetBookmethod = (
     props: UseHenTagMethodProps,
 ): GetBook => {
-    const { domains } = props;
+    const {
+        request,
+        domains: { apiUrl },
+    } = props;
 
-    //! Hentag doesnt have trening
-    return async (): Promise<Book> => {
-        useLilithLog(false).log(domains);
+    const { getHenTagResultToBookBase, LanguageCodeMapper } =
+        useHenTagMethods();
+
+    return async (identifier): Promise<Book> => {
+        const response = await request.fetchRequest<HenTagResult>({
+            url: `${apiUrl}/vault/${identifier}`,
+            params: [],
+        });
+
+        const bookBase = getHenTagResultToBookBase(response.data);
+        const {
+            locations,
+            language,
+            title,
+            artists,
+            maleTags,
+            femaleTags,
+            otherTags,
+        } = response.data;
+
         return {
-            id: "test",
-            cover: {
-                uri: "test",
-            },
-            title: "test",
-            availableLanguages: [],
-            author: "test",
-            tags: [],
-            chapters: [],
+            ...bookBase,
+            author: artists.length > 0 ? artists.join(", ") : "unknown",
+            // TODO maybe lilith should provide a unified Tag system
+            tags: [...maleTags, ...otherTags, ...femaleTags], // * Coincidentally we don't need a transform for HenTag tag to Lilith
+            chapters: locations.map((location) => ({
+                id: location,
+                chapterNumber: 1, // We assume that all resources are single chapter entries
+                title,
+                language:
+                    LanguageCodeMapper[`${language}`] ||
+                    LilithLanguage.japanese,
+            })),
         };
     };
 };

@@ -2,6 +2,7 @@ import { UrlParamValue, UrlParamPair, LilithError } from "@atsu/lilith";
 import { HenTagRequestProps, Result } from "../interfaces/fetch";
 import { useLilithLog } from "./log";
 import { HenTagProps, UseRequest } from "../interfaces";
+import { UseDomParserImpl } from "../interfaces/domParser";
 
 const useParamIfExists = (
     key: string,
@@ -25,6 +26,7 @@ const useUrlWithParams = (url: string, params?: UrlParamPair[]) => {
 
 export const useRequest = ({
     fetch,
+    domParser,
     getPage,
     options: { debug },
 }: HenTagProps): UseRequest => {
@@ -59,7 +61,33 @@ export const useRequest = ({
         }
     };
 
-    const scrapRequest = async <T>({
+    const scrapRequest = async ({
+        url,
+        params,
+        requestOptions,
+    }: HenTagRequestProps): Promise<Result<UseDomParserImpl>> => {
+        try {
+            const apiUrl = useUrlWithParams(url, params);
+
+            useLilithLog(debug).log(apiUrl);
+
+            const response = await fetch(apiUrl, requestOptions);
+
+            return {
+                statusCode: 200,
+                data: domParser(await response.text()),
+            };
+        } catch (error) {
+            console.trace(error);
+            throw new LilithError(
+                error.status || 500,
+                "There was an error on the request",
+                error,
+            );
+        }
+    };
+
+    const amagiRequest = async <T>({
         url,
         params,
         onEvaluation,
@@ -88,7 +116,7 @@ export const useRequest = ({
         }
     };
 
-    return { fetchRequest, scrapRequest };
+    return { fetchRequest, amagiRequest, scrapRequest };
 };
 
 export const RequestUtils = {
