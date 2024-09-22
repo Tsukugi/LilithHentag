@@ -1,3 +1,5 @@
+import { CustomFetchInitOptions } from "@atsu/lilith";
+
 export interface Result<T> {
     statusCode: number;
     data: T;
@@ -12,14 +14,6 @@ export interface CustomFetchResponse {
     text: () => Promise<string>;
     json: <T>() => Promise<T>;
     status: number;
-}
-export interface CustomFetchInitOptions {
-    method: "GET" | "POST";
-    headers: HenTagHeaders;
-    body?: string;
-}
-export interface HenTagHeaders {
-    [x: string]: string;
 }
 
 export type UrlParamPair = [string, UrlParamValue];
