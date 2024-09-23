@@ -64,9 +64,15 @@ const scrapEHentaiChapter = async (
 ): Promise<Chapter> => {
     const { data } = await scrapRequest({ url });
 
-    const scrapImages = (data: UseDomParserImpl) => {
-        return data.findAll(".gdtm a").map((a) => ({
-            uri: a.getAttribute("href"),
+    const scrapImages = async (
+        data: UseDomParserImpl,
+    ): Promise<LilithImage[]> => {
+        const links = data
+            .findAll(".gdtm a")
+            .map((a) => scrapRequest({ url: a.getAttribute("href") }));
+
+        return (await Promise.all(links)).map(({ data }) => ({
+            uri: data.find("img#img").getAttribute("src"),
         }));
     };
 
@@ -75,7 +81,7 @@ const scrapEHentaiChapter = async (
             url,
         });
 
-        return scrapImages(data);
+        return await scrapImages(data);
     };
 
     const exlanguage = data
@@ -92,7 +98,7 @@ const scrapEHentaiChapter = async (
         ),
     );
 
-    let images = scrapImages(data);
+    let images = await scrapImages(data);
 
     if (pageUrls.length > 1) {
         const processes = pageUrls
