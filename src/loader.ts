@@ -4,9 +4,9 @@ import { useCheerioDomParser } from "./impl/useCheerioDomParser";
 import { useNodeFetch } from "./impl/useNodeFetch";
 import { HenTagProps, HentagRepo } from "./interfaces";
 
-export const useLilithHenTag = async (
+export const useLilithHenTag = (
     config: Partial<RepositoryBaseProps>,
-): Promise<HentagRepo> => {
+): HentagRepo => {
     const innerConfigurations: HenTagProps = {
         fetch: useNodeFetch,
         domParser: useCheerioDomParser,
