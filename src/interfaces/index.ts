@@ -1,6 +1,5 @@
 import {
     RepositoryBaseProps,
-    Domains,
     ImageUriType,
     RepositoryBase,
 } from "@atsu/lilith";
@@ -59,6 +58,12 @@ export enum HenTagLanguage {
 export interface UseHenTagMethodProps extends RepositoryBaseProps {
     domains: Domains;
     request: UseRequest;
+}
+
+export interface Domains {
+    apiUrl: string;
+    imageUrl?: string;
+    [key: string]: string | undefined;
 }
 
 export interface UseRequest {

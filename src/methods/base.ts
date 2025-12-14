@@ -52,6 +52,7 @@ const getHenTagResultToBookBase = (work: HenTagResult): BookBase => ({
     availableLanguages: [
         LanguageCodeMapper[`${work.language}`] || LilithLanguage.japanese,
     ],
+    savedAt: Date.now(),
 });
 
 const getHenTagResultsToBookBase = (works: HenTagResult[]): BookBase[] => {
@@ -115,6 +116,7 @@ const scrapEHentaiChapter = async (
         language: LanguageMapper[exlanguage],
         chapterNumber: 1,
         pages: images,
+        savedAt: Date.now(),
     };
 };
 

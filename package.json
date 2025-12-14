@@ -27,8 +27,8 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@atsu/amagi": "github:Tsukugi/Amagi",
-    "@atsu/lilith": "github:Tsukugi/Lilith"
+    "@atsu/amagi": "file:../AmagiChan",
+    "@atsu/lilith": "file:../Lilith"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

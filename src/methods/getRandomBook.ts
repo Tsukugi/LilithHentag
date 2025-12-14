@@ -23,6 +23,7 @@ export const useHenTagGetRandomBookMethod = (
             author: "test",
             tags: [],
             chapters: [],
+            savedAt: Date.now(),
         };
     };
 };

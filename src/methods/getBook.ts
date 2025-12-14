@@ -47,7 +47,9 @@ export const useHenTagGetBookmethod = (
                     LanguageCodeMapper[`${language}`] ||
                     LilithLanguage.japanese,
                 pages: [],
+                savedAt: Date.now(),
             })),
+            savedAt: bookBase.savedAt,
         };
     };
 };
